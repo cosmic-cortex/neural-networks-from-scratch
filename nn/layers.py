@@ -26,6 +26,10 @@ class Layer(ABC):
         pass
 
     @abstractmethod
+    def update_weights(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
     def gradX(self, x):
         pass
 
@@ -45,6 +49,9 @@ class Linear(Layer):
         scale = 1 / sqrt(in_dim)
         self.weight = scale * (np.random.rand(in_dim, out_dim) - 0.5)
         self.bias = scale * (np.random.rand(1, out_dim) - 0.5)
+
+    def update_weights(self, *args, **kwargs):
+        pass
 
     def forward(self, x):
         """
