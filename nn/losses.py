@@ -13,10 +13,13 @@ class Loss:
     def backward(self, x):
         pass
 
-    def gradX(self, x):
+    def gradX(self, x, y):
         pass
 
 
 class MeanSquareLoss(Loss):
     def forward(self, x, y):
-        return np.sum((x - y)**2)
+        return np.mean((x - y)**2)
+
+    def gradX(self, x, y):
+        return 2*(x - y)/x.shape[1]
