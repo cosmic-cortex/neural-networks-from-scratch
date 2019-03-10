@@ -2,6 +2,8 @@ import numpy as np
 
 from math import sqrt
 
+from .functional import sigmoid, sigmoid_prime
+
 
 class Layer:
     def __init__(self, *args, **kwargs):
@@ -13,6 +15,12 @@ class Layer:
         return self.output
 
     def forward(self, x):
+        """
+        Forward pass with input x.
+
+        Args:
+            x: numpy.ndarray of shape (1, n_output_dim)
+        """
         pass
 
     def backward(self, x, Dy):
@@ -66,6 +74,14 @@ class Linear(Layer):
 
     def gradW(self, x):
         pass
+
+
+class Sigmoid(Layer):
+    def forward(self, x):
+        return sigmoid(x)
+
+    def gradX(self, x):
+        return np.diag(sigmoid_prime(x).reshape(-1))
 
 
 if __name__ == '__main__':
