@@ -1,10 +1,9 @@
 import numpy as np
 
 from math import sqrt
-from abc import ABC, abstractmethod
 
 
-class Layer(ABC):
+class Layer:
     def __init__(self, *args, **kwargs):
         pass
 
@@ -13,27 +12,21 @@ class Layer(ABC):
         self.output = self.forward(x)
         return self.output
 
-    @abstractmethod
     def forward(self, x):
         pass
 
-    @abstractmethod
     def backward(self, x, Dy):
         pass
 
-    @abstractmethod
     def init_weights(self, *args, **kwargs):
         pass
 
-    @abstractmethod
     def update_weights(self, *args, **kwargs):
         pass
 
-    @abstractmethod
     def gradX(self, x):
         pass
 
-    @abstractmethod
     def gradW(self, x):
         pass
 
