@@ -17,41 +17,23 @@ class Function:
         self.output = self.forward(*args, **kwargs)
         return self.output
 
-    def forward(self, x):
+    def forward(self, *args, **kwargs):
         """
-        Forward pass with input x. Calculates the output value and the
+        Forward pass of the function. Calculates the output value and the
         gradient at the input as well.
-
-        Args:
-            x: numpy.ndarray, the input value.
-
-        Returns:
-            y: numpy.ndarray, the output value.
         """
         pass
 
-    def backward(self, dy):
+    def backward(self, *args, **kwargs):
         """
         Backward pass. Computes the local gradient at the input value
         after forward pass.
-
-        Args:
-            dy: numpy.ndarray, the upward gradient.
-
-        Returns:
-            dX: numpy.ndarray, the _global_ gradient.
         """
         pass
 
-    def gradX(self, x):
+    def gradX(self, *args, **kwargs):
         """
-        Calculates the local derivative of the function at x.
-
-        Args:
-            x: numpy.ndarray, the input data.
-
-        Returns:
-            gradX: numpy.ndarray, output of the layer.
+        Calculates the local derivative of the function at the given input.
         """
         pass
 
@@ -87,12 +69,45 @@ class Linear(Layer):
         pass
 
     def forward(self, x):
+        """
+        Forward pass for the Linear layer.
+
+        Args:
+            x: numpy.ndarray of shape (n_batch, in_dim) containing
+                the input value.
+
+        Returns:
+            y: numpy.ndarray of shape of shape (n_batch, out_dim) containing
+                the output value.
+        """
         return np.dot(x, self.weight) + self.bias
 
     def backward(self, dy):
+        """
+        Backward pass for the Linear layer.
+
+        Args:
+            dy: numpy.ndarray of shape (n_batch, n_out). Global gradient
+                backpropagated from the next layer.
+
+        Returns:
+            dx: numpy.ndarray of shape (n_batch, n_out). Global gradient
+                of the Linear layer.
+        """
         return dy.dot(self.weight.T)
 
     def gradX(self, x):
+        """
+        Local gradient of the Linear layer at x.
+
+        Args:
+            x: numpy.ndarray of shape (n_batch, in_dim) containing the
+                input data.
+
+        Returns:
+            gradX: numpy.ndarray of shape (n_batch, in_dim), containing
+                the local gradient at x.
+        """
         return self.weight
 
     def gradW(self, x):
