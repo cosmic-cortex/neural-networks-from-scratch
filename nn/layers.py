@@ -114,12 +114,15 @@ class Linear(Layer):
         pass
 
 
-class Sigmoid(Layer):
+class Sigmoid(Function):
     def forward(self, x):
         return sigmoid(x)
 
+    def backward(self, dy):
+        return dy*self.gradX_local
+
     def gradX(self, x):
-        return np.diag(sigmoid_prime(x).reshape(-1))
+        return sigmoid_prime(x)
 
 
 if __name__ == '__main__':
