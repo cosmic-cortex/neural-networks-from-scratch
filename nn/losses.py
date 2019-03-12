@@ -15,7 +15,9 @@ class MeanSquareLoss(Function):
             mse: numpy.ndarray of shape (n_batch, 1). Mean square error of x with respect
                 to y.
         """
-        return np.mean((x - y)**2, axis=1)
+        sum = np.sum((x - y)**2, axis=1, keepdims=True)
+        mse_loss = np.mean(sum)
+        return mse_loss
 
     def backward(self):
         """
@@ -39,4 +41,4 @@ class MeanSquareLoss(Function):
         Returns:
             gradX: numpy.ndarray of shape (n_batch, 1). Gradient of MSE wrt X at x and y.
         """
-        return 2*(x - y)/x.shape[1]
+        return 2*(x - y)/x.shape[0]
