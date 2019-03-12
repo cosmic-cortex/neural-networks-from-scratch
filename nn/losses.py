@@ -8,8 +8,7 @@ class MeanSquareLoss(Function):
         Computes the mean square error of x with respect to y.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, d_dim). Should be the output of a
-                Linear layer.
+            x: numpy.ndarray of shape (n_batch, n_dim).
             y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
