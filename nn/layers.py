@@ -62,8 +62,8 @@ class Linear(Layer):
 
     def init_weights(self, in_dim, out_dim):
         scale = 1 / sqrt(in_dim)
-        self.weight = scale * (np.random.rand(in_dim, out_dim) - 0.5)
-        self.bias = scale * (np.random.rand(1, out_dim) - 0.5)
+        self.weight = scale * np.random.randn(in_dim, out_dim)
+        self.bias = scale * np.random.randn(1, out_dim)
 
     def update_weights(self, *args, **kwargs):
         pass
@@ -118,7 +118,7 @@ class Sigmoid(Layer):
     def forward(self, x):
         return sigmoid(x)
 
-    def dx(self, x):
+    def gradX(self, x):
         return np.diag(sigmoid_prime(x).reshape(-1))
 
 

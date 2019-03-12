@@ -18,6 +18,13 @@ class MeanSquareLoss(Function):
         return np.mean((x - y)**2, axis=1)
 
     def backward(self):
+        """
+        Backward pass for the MeanSquareLoss function. Since it should be the final layer
+        of an architecture, no input is needed for the backward pass.
+
+        Returns:
+            gradX: numpy.ndarray of shape (n_batch, n_dim). Local gradient of the MSE loss.
+        """
         return self.gradX_local
 
     def gradX(self, x, y):
