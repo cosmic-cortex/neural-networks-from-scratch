@@ -13,7 +13,9 @@ class Function:
         pass
 
     def __call__(self, *args, **kwargs):
-        return self.forward(*args, **kwargs)
+        self.gradX_local = self.gradX(*args, **kwargs)
+        self.output = self.forward(*args, **kwargs)
+        return self.output
 
     def forward(self, x):
         """
@@ -85,9 +87,7 @@ class Linear(Layer):
         pass
 
     def forward(self, x):
-        self.gradX_local = self.gradX(x)
-        self.output = np.dot(x, self.weight) + self.bias
-        return self.output
+        return np.dot(x, self.weight) + self.bias
 
     def backward(self, dy):
         return dy.dot(self.weight.T)
