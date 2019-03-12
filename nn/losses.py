@@ -40,7 +40,7 @@ class Loss(Function):
         pass
 
 
-class MeanSquareLoss(Function):
+class MeanSquareLoss(Loss):
     def forward(self, x, y):
         """
         Computes the mean square error of x with respect to y.
