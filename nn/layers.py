@@ -5,34 +5,61 @@ from math import sqrt
 from .functional import sigmoid, sigmoid_prime
 
 
-class Layer:
+class Function:
+    """
+    Abstract model of a differentiable function.
+    """
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, x):
-        self.input = x
-        self.output = self.forward(x)
-        return self.output
-
     def forward(self, x):
         """
-        Forward pass with input x.
+        Forward pass with input x. Calculates the output value and the
+        gradient at the input as well.
 
         Args:
-            x: numpy.ndarray of shape (1, n_output_dim)
+            x: numpy.ndarray, the input value.
+
+        Returns:
+            y: numpy.ndarray, the output value.
         """
         pass
 
-    def backward(self, x, Dy):
+    def backward(self, dy):
+        """
+        Backward pass. Computes the local gradient at the input value
+        after forward pass.
+
+        Args:
+            dy: numpy.ndarray, the upward gradient.
+
+        Returns:
+            dX: numpy.ndarray, the _global_ gradient.
+        """
         pass
 
+    def gradX(self, x):
+        """
+        Calculates the local derivative of the function at x.
+
+        Args:
+            x: numpy.ndarray, the input data.
+
+        Returns:
+            y: numpy.ndarray, output of the layer.
+        """
+        pass
+
+
+class Layer(Function):
+    """
+    Abstract model of a neural network layer. In addition to Function, a Layer
+    also has weights and gradients with respect to the weights.
+    """
     def init_weights(self, *args, **kwargs):
         pass
 
     def update_weights(self, *args, **kwargs):
-        pass
-
-    def gradX(self, x):
         pass
 
     def gradW(self, x):
@@ -55,19 +82,12 @@ class Linear(Layer):
         pass
 
     def forward(self, x):
-        """
-        Forward pass for the linear layer.
+        self.gradX_local = self.gradX(x)
+        self.output = np.dot(x, self.weight) + self.bias
+        return self.output
 
-        Args:
-            x: numpy.array of shape (1, in_dim)
-
-        Returns:
-            y: numpy.array of shape (1, out_dim)
-        """
-        return np.dot(x, self.weight) + self.bias
-
-    def backward(self, x, Dy):
-        pass
+    def backward(self, dy):
+        return dy.dot(self.weight.T)
 
     def gradX(self, x):
         return self.weight
@@ -80,7 +100,7 @@ class Sigmoid(Layer):
     def forward(self, x):
         return sigmoid(x)
 
-    def gradX(self, x):
+    def dx(self, x):
         return np.diag(sigmoid_prime(x).reshape(-1))
 
 
