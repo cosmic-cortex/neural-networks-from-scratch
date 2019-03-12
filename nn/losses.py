@@ -1,10 +1,11 @@
-class Loss:
+import numpy as np
+from .layers import Function
+
+
+class Loss(Function):
     """
     Abstract model of a loss function.
     """
-    def __init__(self, *args, **kwargs):
-        pass
-
     def forward(self, x, y):
         pass
 
@@ -21,15 +22,20 @@ class MeanSquareLoss(Loss):
         Computes the mean square error of x with respect to y.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, 1). Should be the output of a
+            x: numpy.ndarray of shape (n_batch, d_dim). Should be the output of a
                 Linear layer.
-            y: numpy.ndarray of shape (n_batch, 1).
+            y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
-            mse: numpy.ndarray of shape (1, 1). Mean square error of x with respect
+            mse: numpy.ndarray of shape (n_batch, 1). Mean square error of x with respect
                 to y.
         """
-        return np.mean((x - y)**2)
+        self.gradX_local = self.gradX(x, y)
+        self.output = np.mean((x - y)**2, axis=1)
+        return self.output
+
+    def backward(self):
+        return self.gradX_local
 
     def gradX(self, x, y):
         """

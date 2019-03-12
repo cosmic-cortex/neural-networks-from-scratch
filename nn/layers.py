@@ -12,6 +12,9 @@ class Function:
     def __init__(self, *args, **kwargs):
         pass
 
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)
+
     def forward(self, x):
         """
         Forward pass with input x. Calculates the output value and the
