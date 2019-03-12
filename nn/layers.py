@@ -46,7 +46,7 @@ class Function:
             x: numpy.ndarray, the input data.
 
         Returns:
-            y: numpy.ndarray, output of the layer.
+            gradX: numpy.ndarray, output of the layer.
         """
         pass
 

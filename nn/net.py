@@ -9,3 +9,6 @@ class Net:
         for layer in self.layers:
             x = layer(x)
         return x
+
+    def backward(self):
+        pass
