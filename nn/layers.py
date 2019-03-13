@@ -11,7 +11,7 @@ class Function:
     """
     def __init__(self, *args, **kwargs):
         # initializing cache for intermediate results
-        # helps with gradient calculation
+        # helps with gradient calculation in some cases
         self.cache = {}
         # cache for gradients
         self.grad = {}
@@ -19,9 +19,8 @@ class Function:
     def __call__(self, *args, **kwargs):
         # calculating output
         output = self.forward(*args, **kwargs)
-        # caching
-        self.cache['output'] = output
-        self.grad['X'] = self.gradX(*args, **kwargs)
+        # calculating and caching local gradients
+        self.grad = self.local_grad(*args, **kwargs)
         return output
 
     def forward(self, *args, **kwargs):
@@ -38,9 +37,18 @@ class Function:
         """
         pass
 
-    def gradX(self, *args, **kwargs):
+    def local_grad(self, *args, **kwargs):
         """
-        Calculates the local derivative of the function at the given input.
+        Calculates the local gradients of the function at the given input.
+
+        Returns:
+            grad: dictionary of local gradients.
+        """
+        pass
+
+    def global_grad(self, *args, **kwargs):
+        """
+        Calculates the global gradients during backpropagation.
         """
         pass
 
@@ -53,23 +61,30 @@ class Layer(Function):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.weight = {}
+        self.weight_update = {}
 
-    def init_weights(self, *args, **kwargs):
+    def _init_weights(self, *args, **kwargs):
         pass
 
-    def update_weights(self, lr):
-        pass
+    def _update_weights(self, lr):
+        """
+        Updates the weights using the corresponding _global_ gradients computed during
+        backpropagation.
 
-    def gradW(self, X):
+        Args:
+             lr: float. Learning rate.
+        """
+        for weight_key, weight in self.weight.items():
+            self.weight[weight_key] = self.weight[weight_key] - lr * self.weight_update[weight_key]
         pass
 
 
 class Linear(Layer):
     def __init__(self, in_dim, out_dim):
         super().__init__()
-        self.init_weights(in_dim, out_dim)
+        self._init_weights(in_dim, out_dim)
 
-    def init_weights(self, in_dim, out_dim):
+    def _init_weights(self, in_dim, out_dim):
         scale = 1 / sqrt(in_dim)
         self.weight['W'] = scale * np.random.randn(in_dim, out_dim)
         self.weight['b'] = scale * np.random.randn(1, out_dim)
@@ -86,9 +101,14 @@ class Linear(Layer):
             Y: numpy.ndarray of shape of shape (n_batch, out_dim) containing
                 the output value.
         """
+
+        output = np.dot(X, self.weight['W']) + self.weight['b']
+
         # caching variables for backprop
         self.cache['X'] = X
-        return np.dot(X, self.weight['W']) + self.weight['b']
+        self.cache['output'] = output
+
+        return output
 
     def backward(self, dY):
         """
@@ -103,40 +123,35 @@ class Linear(Layer):
                 of the Linear layer.
         """
         # calculating the global gradient, to be propagated backwards
-        dX = dY.dot(self.weight['W'].T)
-        # calculating the gradient wrt to weights
-        self.grad['W'], self.grad['b'] = self.gradW(self.cache['X'])
+        dX = dY.dot(self.grad['X'].T)
+        # calculating the global gradient wrt to weights
+        X = self.cache['X']
+        dW = self.grad['W'].T.dot(dY)
+        db = np.sum(dY, axis=0, keepdims=True)
+        # caching the global gradients
+        self.weight_update = {'W': dW, 'b': db}
+
         return dX
 
-    def gradX(self, X):
+    def local_grad(self, X):
         """
-        Local gradient of the Linear layer at X.
+        Local gradients of the Linear layer at X.
 
         Args:
             X: numpy.ndarray of shape (n_batch, in_dim) containing the
                 input data.
 
         Returns:
-            gradX: numpy.ndarray of shape (n_batch, in_dim), containing
-                the local gradient at X.
+            grads: dictionary of local gradients with the following items:
+                X: numpy.ndarray of shape (n_batch, in_dim).
+                W: numpy.ndarray of shape (n_batch, in_dim).
+                b: numpy.ndarray of shape (n_batch, 1).
         """
-        return self.weight['W']
-
-    def gradW(self, X):
-        """
-        Gradient of the Linear layer with respect to the weights.
-
-        Args:
-            X: numpy.ndarray of shape (n_batch, in_dim) containing the
-                input data.
-
-        Returns:
-            gradW: numpy.ndarray of shape (n_batch, in_dim).
-            gradb: numpy.ndarray of shape (n_batch, 1).
-        """
-        gradW = X
-        gradb = np.ones_like(self.weight['b'])
-        return gradW, gradb
+        gradX_local = self.weight['W']
+        gradW_local = X
+        gradb_local = np.ones_like(self.weight['b'])
+        grads = {'X': gradX_local, 'W': gradW_local, 'b': gradb_local}
+        return grads
 
 
 class Sigmoid(Function):
@@ -146,9 +161,6 @@ class Sigmoid(Function):
     def backward(self, dY):
         return dY * self.grad['X']
 
-    def gradX(self, X):
-        return sigmoid_prime(X)
-
-
-if __name__ == '__main__':
-    linear = Linear(5, 2)
+    def local_grad(self, X):
+        grads = {'X': sigmoid_prime(X)}
+        return grads

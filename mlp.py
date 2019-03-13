@@ -14,5 +14,4 @@ crossent(x, yl)
 out = net(x)
 loss = net.loss(out, y)
 grad = net.backward()
-
-pass
+net.update_weights(10)

@@ -1,5 +1,5 @@
 from .losses import Loss
-from .layers import Function
+from .layers import Function, Layer
 
 
 class Net:
@@ -59,3 +59,15 @@ class Net:
         for layer in reversed(self.layers):
             d = layer.backward(d)
         return d
+
+    def update_weights(self, lr):
+        """
+        Updates the weights for all layers using the corresponding gradients
+        computed during backpropagation.
+
+        Args:
+             lr: float. Learning rate.
+        """
+        for layer in self.layers:
+            if isinstance(layer, Layer):
+                layer._update_weights(lr)
