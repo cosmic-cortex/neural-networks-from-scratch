@@ -10,7 +10,9 @@ class Function:
     Abstract model of a differentiable function.
     """
     def __init__(self, *args, **kwargs):
-        pass
+        # initializing cache for intermediate results
+        # helps with gradient calculation
+        self.cache = {}
 
     def __call__(self, *args, **kwargs):
         self.output = self.forward(*args, **kwargs)
