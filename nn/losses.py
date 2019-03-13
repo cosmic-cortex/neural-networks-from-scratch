@@ -100,4 +100,4 @@ class CrossEntropyLoss(Loss):
         ones = np.zeros_like(probs)
         for row_idx, col_idx in enumerate(y):
             ones[row_idx, col_idx] = 1.0
-        return probs - ones
+        return (probs - ones)/len(x)
