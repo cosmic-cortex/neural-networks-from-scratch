@@ -62,8 +62,8 @@ class Linear(Layer):
 
     def init_weights(self, in_dim, out_dim):
         scale = 1 / sqrt(in_dim)
-        self.weight = scale * np.random.randn(in_dim, out_dim)
-        self.bias = scale * np.random.randn(1, out_dim)
+        self.W = scale * np.random.randn(in_dim, out_dim)
+        self.b = scale * np.random.randn(1, out_dim)
 
     def update_weights(self, *args, **kwargs):
         pass
@@ -80,7 +80,7 @@ class Linear(Layer):
             y: numpy.ndarray of shape of shape (n_batch, out_dim) containing
                 the output value.
         """
-        return np.dot(x, self.weight) + self.bias
+        return np.dot(x, self.W) + self.b
 
     def backward(self, dy):
         """
@@ -94,7 +94,9 @@ class Linear(Layer):
             dx: numpy.ndarray of shape (n_batch, n_out). Global gradient
                 of the Linear layer.
         """
-        return dy.dot(self.weight.T)
+        # calculating the global gradient, to be propagated backwards
+        dx = dy.dot(self.W.T)
+        return dx
 
     def gradX(self, x):
         """
@@ -108,10 +110,23 @@ class Linear(Layer):
             gradX: numpy.ndarray of shape (n_batch, in_dim), containing
                 the local gradient at x.
         """
-        return self.weight
+        return self.W
 
     def gradW(self, x):
-        pass
+        """
+        Gradient of the Linear layer with respect to the weights.
+
+        Args:
+            x: numpy.ndarray of shape (n_batch, in_dim) containing the
+                input data.
+
+        Returns:
+            gradW: numpy.ndarray of shape (n_batch, in_dim).
+            gradb: numpy.ndarray of shape (n_batch, 1).
+        """
+        gradW = x
+        gradb = np.ones_like(self.b)
+        return gradW, gradb
 
 
 class Sigmoid(Function):
