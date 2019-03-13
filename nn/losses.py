@@ -50,7 +50,7 @@ class MeanSquareLoss(Loss):
             y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
-            mse: numpy.float. Mean square error of x with respect to y.
+            mse_loss: numpy.float. Mean square error of x with respect to y.
         """
         sum = np.sum((x - y)**2, axis=1, keepdims=True)
         mse_loss = np.mean(sum)
@@ -71,4 +71,33 @@ class MeanSquareLoss(Loss):
 
 
 class CrossEntropyLoss(Loss):
-    pass
+    def forward(self, x, y):
+        """
+        Computes the cross entropy loss of x with respect to y.
+
+        Args:
+            x: numpy.ndarray of shape (n_batch, n_dim).
+            y: numpy.ndarray of shape (n_batch, 1). Should contain class labels
+                for each data point in x.
+
+        Returns:
+            crossentropy_loss: numpy.float. Cross entropy loss of x with respect to y.
+        """
+        # calculating crossentropy
+        exp_x = np.exp(x)
+        probs = exp_x/np.sum(exp_x, axis=1, keepdims=True)
+        log_probs = -np.log(probs[:, y])
+        crossentropy_loss = np.mean(log_probs)
+
+        # caching for backprop
+        self.cache['probs'] = probs
+        self.cache['y'] = y
+
+        return crossentropy_loss
+
+    def gradX(self, x, y):
+        probs = self.cache['probs']
+        ones = np.zeros_like(probs)
+        for row_idx, col_idx in enumerate(y):
+            ones[row_idx, col_idx] = 1.0
+        return probs - ones
