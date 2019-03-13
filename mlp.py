@@ -2,16 +2,18 @@ from nn.layers import *
 from nn.losses import MeanSquareLoss, CrossEntropyLoss
 from nn.net import Net
 
-net = Net(layers=[Linear(2, 2), Sigmoid()],
-          loss=MeanSquareLoss())
-x = np.random.rand(10, 2)
-y = np.random.rand(10, 2)
-yl = np.random.randint(0, 2, size=(10, 1))
+# generating some data
+X = np.concatenate((np.random.multivariate_normal([-1, -1], [[0.1, 0], [0, 0.1]], size=100),
+                    np.random.multivariate_normal([1, 1], [[0.1, 0], [0, 0.1]], size=100)))
+Y_labels = np.array([0]*100 + [1]*100)
 
-crossent = CrossEntropyLoss()
-crossent(x, yl)
+net = Net(layers=[Linear(2, 2)],
+          loss=CrossEntropyLoss())
 
-out = net(x)
-loss = net.loss(out, y)
-grad = net.backward()
-net.update_weights(10)
+n_epochs = 1000
+for epoch_idx in range(n_epochs):
+    out = net(X)
+    loss = net.loss(out, Y_labels)
+    print('loss: %1.4f' % loss)
+    grad = net.backward()
+    net.update_weights(0.001)
