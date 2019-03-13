@@ -3,13 +3,13 @@ from .layers import Function
 
 
 class Loss(Function):
-    def forward(self, x, y):
+    def forward(self, X, Y):
         """
         Computes the loss of x with respect to y.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, n_dim).
-            y: numpy.ndarray of shape (n_batch, n_dim).
+            X: numpy.ndarray of shape (n_batch, n_dim).
+            Y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
             loss: numpy.float.
@@ -24,15 +24,15 @@ class Loss(Function):
         Returns:
             gradX: numpy.ndarray of shape (n_batch, n_dim). Local gradient of the loss.
         """
-        return self.gradX_local
+        return self.grad['X']
 
-    def gradX(self, x, y):
+    def gradX(self, X, Y):
         """
-        Local gradient with respect to x at (x, y).
+        Local gradient with respect to X at (X, Y).
 
         Args:
-            x: numpy.ndarray of shape (n_batch, n_dim).
-            y: numpy.ndarray of shape (n_batch, n_dim).
+            X: numpy.ndarray of shape (n_batch, n_dim).
+            Y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
             gradX: numpy.ndarray of shape (n_batch, n_dim).
@@ -41,42 +41,42 @@ class Loss(Function):
 
 
 class MeanSquareLoss(Loss):
-    def forward(self, x, y):
+    def forward(self, X, Y):
         """
-        Computes the mean square error of x with respect to y.
+        Computes the mean square error of X with respect to Y.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, n_dim).
-            y: numpy.ndarray of shape (n_batch, n_dim).
+            X: numpy.ndarray of shape (n_batch, n_dim).
+            Y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
             mse_loss: numpy.float. Mean square error of x with respect to y.
         """
-        sum = np.sum((x - y)**2, axis=1, keepdims=True)
+        sum = np.sum((X - Y) ** 2, axis=1, keepdims=True)
         mse_loss = np.mean(sum)
         return mse_loss
 
-    def gradX(self, x, y):
+    def gradX(self, X, Y):
         """
-        Local gradient with respect to x at (x, y).
+        Local gradient with respect to X at (X, Y).
 
         Args:
-            x: numpy.ndarray of shape (n_batch, n_dim).
-            y: numpy.ndarray of shape (n_batch, n_dim).
+            X: numpy.ndarray of shape (n_batch, n_dim).
+            Y: numpy.ndarray of shape (n_batch, n_dim).
 
         Returns:
-            gradX: numpy.ndarray of shape (n_batch, n_dim). Gradient of MSE wrt X at x and y.
+            gradX: numpy.ndarray of shape (n_batch, n_dim). Gradient of MSE wrt X at X and Y.
         """
-        return 2*(x - y)/x.shape[0]
+        return 2 * (X - Y) / X.shape[0]
 
 
 class CrossEntropyLoss(Loss):
-    def forward(self, x, y):
+    def forward(self, X, y):
         """
         Computes the cross entropy loss of x with respect to y.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, n_dim).
+            X: numpy.ndarray of shape (n_batch, n_dim).
             y: numpy.ndarray of shape (n_batch, 1). Should contain class labels
                 for each data point in x.
 
@@ -84,7 +84,7 @@ class CrossEntropyLoss(Loss):
             crossentropy_loss: numpy.float. Cross entropy loss of x with respect to y.
         """
         # calculating crossentropy
-        exp_x = np.exp(x)
+        exp_x = np.exp(X)
         probs = exp_x/np.sum(exp_x, axis=1, keepdims=True)
         log_probs = -np.log(probs[:, y])
         crossentropy_loss = np.mean(log_probs)
@@ -95,9 +95,9 @@ class CrossEntropyLoss(Loss):
 
         return crossentropy_loss
 
-    def gradX(self, x, y):
+    def gradX(self, X, y):
         probs = self.cache['probs']
         ones = np.zeros_like(probs)
         for row_idx, col_idx in enumerate(y):
             ones[row_idx, col_idx] = 1.0
-        return (probs - ones)/len(x)
+        return (probs - ones)/len(X)

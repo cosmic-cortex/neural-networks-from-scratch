@@ -13,11 +13,16 @@ class Function:
         # initializing cache for intermediate results
         # helps with gradient calculation
         self.cache = {}
+        # cache for gradients
+        self.grad = {}
 
     def __call__(self, *args, **kwargs):
-        self.output = self.forward(*args, **kwargs)
-        self.gradX_local = self.gradX(*args, **kwargs)
-        return self.output
+        # calculating output
+        output = self.forward(*args, **kwargs)
+        # caching
+        self.cache['output'] = output
+        self.grad['X'] = self.gradX(*args, **kwargs)
+        return output
 
     def forward(self, *args, **kwargs):
         """
@@ -45,13 +50,17 @@ class Layer(Function):
     Abstract model of a neural network layer. In addition to Function, a Layer
     also has weights and gradients with respect to the weights.
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.weight = {}
+
     def init_weights(self, *args, **kwargs):
         pass
 
-    def update_weights(self, *args, **kwargs):
+    def update_weights(self, lr):
         pass
 
-    def gradW(self, x):
+    def gradW(self, X):
         pass
 
 
@@ -62,82 +71,83 @@ class Linear(Layer):
 
     def init_weights(self, in_dim, out_dim):
         scale = 1 / sqrt(in_dim)
-        self.W = scale * np.random.randn(in_dim, out_dim)
-        self.b = scale * np.random.randn(1, out_dim)
+        self.weight['W'] = scale * np.random.randn(in_dim, out_dim)
+        self.weight['b'] = scale * np.random.randn(1, out_dim)
 
-    def update_weights(self, *args, **kwargs):
-        pass
-
-    def forward(self, x):
+    def forward(self, X):
         """
         Forward pass for the Linear layer.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, in_dim) containing
+            X: numpy.ndarray of shape (n_batch, in_dim) containing
                 the input value.
 
         Returns:
-            y: numpy.ndarray of shape of shape (n_batch, out_dim) containing
+            Y: numpy.ndarray of shape of shape (n_batch, out_dim) containing
                 the output value.
         """
-        return np.dot(x, self.W) + self.b
+        # caching variables for backprop
+        self.cache['X'] = X
+        return np.dot(X, self.weight['W']) + self.weight['b']
 
-    def backward(self, dy):
+    def backward(self, dY):
         """
         Backward pass for the Linear layer.
 
         Args:
-            dy: numpy.ndarray of shape (n_batch, n_out). Global gradient
+            dY: numpy.ndarray of shape (n_batch, n_out). Global gradient
                 backpropagated from the next layer.
 
         Returns:
-            dx: numpy.ndarray of shape (n_batch, n_out). Global gradient
+            dX: numpy.ndarray of shape (n_batch, n_out). Global gradient
                 of the Linear layer.
         """
         # calculating the global gradient, to be propagated backwards
-        dx = dy.dot(self.W.T)
-        return dx
+        dX = dY.dot(self.weight['W'].T)
+        # calculating the gradient wrt to weights
+        self.grad['W'], self.grad['b'] = self.gradW(self.cache['X'])
+        return dX
 
-    def gradX(self, x):
+    def gradX(self, X):
         """
-        Local gradient of the Linear layer at x.
+        Local gradient of the Linear layer at X.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, in_dim) containing the
+            X: numpy.ndarray of shape (n_batch, in_dim) containing the
                 input data.
 
         Returns:
             gradX: numpy.ndarray of shape (n_batch, in_dim), containing
-                the local gradient at x.
+                the local gradient at X.
         """
-        return self.W
+        return self.weight['W']
 
-    def gradW(self, x):
+    def gradW(self, X):
         """
         Gradient of the Linear layer with respect to the weights.
 
         Args:
-            x: numpy.ndarray of shape (n_batch, in_dim) containing the
+            X: numpy.ndarray of shape (n_batch, in_dim) containing the
                 input data.
 
         Returns:
             gradW: numpy.ndarray of shape (n_batch, in_dim).
             gradb: numpy.ndarray of shape (n_batch, 1).
         """
-        gradW = x
-        gradb = np.ones_like(self.b)
+        gradW = X
+        gradb = np.ones_like(self.weight['b'])
         return gradW, gradb
 
 
 class Sigmoid(Function):
-    def forward(self, x):
-        return sigmoid(x)
+    def forward(self, X):
+        return sigmoid(X)
 
-    def backward(self, dy):
-        return dy*self.gradX_local
+    def backward(self, dY):
+        return dY * self.grad['X']
 
-    def gradX(self, x):
-        return sigmoid_prime(x)
+    def gradX(self, X):
+        return sigmoid_prime(X)
 
 
 if __name__ == '__main__':
