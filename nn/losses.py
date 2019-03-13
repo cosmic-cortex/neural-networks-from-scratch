@@ -18,11 +18,11 @@ class Loss(Function):
 
     def backward(self):
         """
-        Backward pass for the MeanSquareLoss function. Since it should be the final layer
+        Backward pass for the loss function. Since it should be the final layer
         of an architecture, no input is needed for the backward pass.
 
         Returns:
-            gradX: numpy.ndarray of shape (n_batch, n_dim). Local gradient of the MSE loss.
+            gradX: numpy.ndarray of shape (n_batch, n_dim). Local gradient of the loss.
         """
         return self.gradX_local
 
@@ -68,3 +68,7 @@ class MeanSquareLoss(Loss):
             gradX: numpy.ndarray of shape (n_batch, n_dim). Gradient of MSE wrt X at x and y.
         """
         return 2*(x - y)/x.shape[0]
+
+
+class CrossEntropyLoss(Loss):
+    pass
