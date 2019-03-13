@@ -13,8 +13,8 @@ class Function:
         pass
 
     def __call__(self, *args, **kwargs):
-        self.gradX_local = self.gradX(*args, **kwargs)
         self.output = self.forward(*args, **kwargs)
+        self.gradX_local = self.gradX(*args, **kwargs)
         return self.output
 
     def forward(self, *args, **kwargs):
@@ -54,8 +54,6 @@ class Layer(Function):
 
 
 class Linear(Layer):
-    __slots__ = ['weight', 'bias']
-
     def __init__(self, in_dim, out_dim):
         super().__init__()
         self.init_weights(in_dim, out_dim)
