@@ -44,12 +44,6 @@ class Function:
         """
         pass
 
-    def global_grad(self, *args, **kwargs):
-        """
-        Calculates the global gradients during backpropagation.
-        """
-        pass
-
 
 class Layer(Function):
     """
@@ -150,3 +144,7 @@ class Linear(Layer):
         gradb_local = np.ones_like(self.weight['b'])
         grads = {'X': gradX_local, 'W': gradW_local, 'b': gradb_local}
         return grads
+
+
+class Conv2D(Layer):
+    pass
