@@ -2,8 +2,6 @@ import numpy as np
 
 from math import sqrt
 
-from .functional import sigmoid, sigmoid_prime
-
 
 class Function:
     """
@@ -151,16 +149,4 @@ class Linear(Layer):
         gradW_local = X
         gradb_local = np.ones_like(self.weight['b'])
         grads = {'X': gradX_local, 'W': gradW_local, 'b': gradb_local}
-        return grads
-
-
-class Sigmoid(Function):
-    def forward(self, X):
-        return sigmoid(X)
-
-    def backward(self, dY):
-        return dY * self.grad['X']
-
-    def local_grad(self, X):
-        grads = {'X': sigmoid_prime(X)}
         return grads
