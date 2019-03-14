@@ -147,4 +147,16 @@ class Linear(Layer):
 
 
 class Conv2D(Layer):
-    pass
+    def __init__(self, in_channels, out_channels, kernel_size, padding=0):
+        super().__init__()
+        self.padding = padding
+        self._init_weights(in_channels, out_channels, kernel_size)
+
+    def _init_weights(self, in_channels, out_channels, kernel_size):
+        kernel_size = kernel_size if isinstance(kernel_size, tuple) \
+                                  else (kernel_size, kernel_size)
+        scale = 2/sqrt(in_channels*kernel_size[0]*kernel_size[0])
+
+        self.weight = {'W': np.random.normal(scale=scale,
+                                             size=(out_channels, *kernel_size, in_channels)),
+                       'b': np.zeros(shape=(out_channels, 1))}
