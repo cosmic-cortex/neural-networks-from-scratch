@@ -1,6 +1,7 @@
 import numpy as np
 
 from math import sqrt
+from itertools import product
 
 
 class Function:
@@ -157,7 +158,7 @@ class Flatten(Function):
 
 
 class Conv2D(Layer):
-    def __init__(self, in_channels, out_channels, stride=1, kernel_size=3, padding=0):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0):
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -165,7 +166,7 @@ class Conv2D(Layer):
         self.kernel_size = kernel_size if isinstance(kernel_size, tuple) \
                            else (kernel_size, kernel_size)
         self.padding = padding
-        self._init_weights(in_channels, out_channels, kernel_size)
+        self._init_weights(in_channels, out_channels, self.kernel_size)
 
     def _init_weights(self, in_channels, out_channels, kernel_size):
         scale = 2/sqrt(in_channels*kernel_size[0]*kernel_size[0])
@@ -173,3 +174,30 @@ class Conv2D(Layer):
         self.weight = {'W': np.random.normal(scale=scale,
                                              size=(out_channels, in_channels, *kernel_size)),
                        'b': np.zeros(shape=(out_channels, 1))}
+
+    def forward(self, X):
+        """
+        Forward pass for the convolution layer.
+
+        Args:
+            X: numpy.ndarray of shape (N, C, H_in, W_in).
+
+        Returns:
+            Y: numpy.ndarray of shape (N, F, H_out, W_out).
+        """
+        if self.padding:
+            pad = [(0, 0)]*2 + [(self.padding, self.padding)]*2
+            X = np.pad(X, pad, 'constant')
+
+        N, C, H, W = X.shape
+        KH, KW = self.kernel_size
+        out_shape = (N, self.out_channels, 1 + (H - KH)//self.stride, 1 + (W - KW)//self.stride)
+        Y = np.zeros(out_shape)
+        for n in range(N):
+            for c_w in range(self.out_channels):
+                for h, w in product(range(out_shape[2]), range(out_shape[3])):
+                    h_offset, w_offset = h*self.stride, w*self.stride
+                    rec_field = X[n, :, h_offset:h_offset + KH, w_offset:w_offset + KW]
+                    Y[n, c_w, h, w] = np.sum(self.weight['W'][c_w]*rec_field) + self.weight['b'][c_w]
+
+        return Y
