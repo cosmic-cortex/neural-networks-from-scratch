@@ -146,6 +146,16 @@ class Linear(Layer):
         return grads
 
 
+class Flatten(Function):
+    def forward(self, X):
+        self.cache['shape'] = X.shape
+        n_batch = X.shape[0]
+        return X.reshape(n_batch, -1)
+
+    def backward(self, dY):
+        return dY.reshape(self.cache['shape'])
+
+
 class Conv2D(Layer):
     def __init__(self, in_channels, out_channels, stride=1, kernel_size=3, padding=0):
         super().__init__()
