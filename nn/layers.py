@@ -204,3 +204,18 @@ class Conv2D(Layer):
                     Y[n, c_w, h, w] = np.sum(self.weight['W'][c_w]*rec_field) + self.weight['b'][c_w]
 
         return Y
+
+    def backward(self, dY):
+        # calculating the global gradient to be propagated backwards
+        # TODO: this is actually transpose convolution, move this to an util function
+        gradX_local = np.zeros_like(self.cache['X'])
+        N, C, H, W = gradX_local.shape
+        KH, KW = self.kernel_size
+        for n in range(N):
+            for c_w in range(self.out_channels):
+                for h, w in product(range(dY.shape[2]), range(dY.shape[3])):
+                    h_offset, w_offset = h * self.stride, w * self.stride
+                    gradX_local[n, :, h_offset:h_offset + KH, w_offset:w_offset + KW] += \
+                        self.weight['W'][c_w] * dY[n, c_w, h, w]
+
+        return gradX_local[:, :, self.padding:-self.padding, self.padding:-self.padding]
