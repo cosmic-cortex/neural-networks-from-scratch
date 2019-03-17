@@ -3,6 +3,8 @@ import numpy as np
 from math import sqrt
 from itertools import product
 
+from .utils import zero_pad
+
 
 class Function:
     """
@@ -186,8 +188,9 @@ class Conv2D(Layer):
             Y: numpy.ndarray of shape (N, F, H_out, W_out).
         """
         if self.padding:
-            pad = [(0, 0)]*2 + [(self.padding, self.padding)]*2
-            X = np.pad(X, pad, 'constant')
+            X = zero_pad(X, pad_width=self.padding, dims=(2, 3))
+
+        self.cache['X'] = X
 
         N, C, H, W = X.shape
         KH, KW = self.kernel_size
