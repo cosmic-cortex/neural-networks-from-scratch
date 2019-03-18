@@ -16,3 +16,11 @@ def relu(x):
 
 def relu_prime(x):
     return 1*(x > 0)
+
+
+def leaky_relu(x, alpha):
+    return x*(x > 0) + alpha*x*(x <= 0)
+
+
+def leaky_relu_prime(x, alpha):
+    return 1*(x > 0) + alpha*(x <= 0)
