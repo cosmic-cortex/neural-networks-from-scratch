@@ -270,7 +270,7 @@ class Conv2D(Layer):
                     dW[c_w, c_i, h, w] = np.sum(X_rec_field*dY_rec_field)
 
         # calculating the global gradient wrt to the bias
-        db = np.sum(dY, axis=(0, 2, 3))
+        db = np.sum(dY, axis=(0, 2, 3)).reshape(-1, 1)
 
         # caching the global gradients of the parameters
         self.weight_update['W'] = dW
