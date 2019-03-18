@@ -71,7 +71,6 @@ class Layer(Function):
         """
         for weight_key, weight in self.weight.items():
             self.weight[weight_key] = self.weight[weight_key] - lr * self.weight_update[weight_key]
-        pass
 
 
 class Linear(Layer):
@@ -250,14 +249,31 @@ class Conv2D(Layer):
     def backward(self, dY):
         # calculating the global gradient to be propagated backwards
         # TODO: this is actually transpose convolution, move this to an util function
-        gradX_local = np.zeros_like(self.cache['X'])
-        N, C, H, W = gradX_local.shape
+        X = self.cache['X']
+        dX = np.zeros_like(X)
+        N, C, H, W = dX.shape
         KH, KW = self.kernel_size
         for n in range(N):
             for c_w in range(self.out_channels):
                 for h, w in product(range(dY.shape[2]), range(dY.shape[3])):
                     h_offset, w_offset = h * self.stride, w * self.stride
-                    gradX_local[n, :, h_offset:h_offset + KH, w_offset:w_offset + KW] += \
+                    dX[n, :, h_offset:h_offset + KH, w_offset:w_offset + KW] += \
                         self.weight['W'][c_w] * dY[n, c_w, h, w]
 
-        return gradX_local[:, :, self.padding:-self.padding, self.padding:-self.padding]
+        # calculating the global gradient wrt the conv filter weights
+        dW = np.zeros_like(self.weight['W'])
+        for c_w in range(self.out_channels):
+            for c_i in range(self.in_channels):
+                for h, w in product(range(KH), range(KW)):
+                    X_rec_field = X[:, c_i, h:H-KH+h+1:self.stride, w:W-KW+w+1:self.stride]
+                    dY_rec_field = dY[:, c_w]
+                    dW[c_w, c_i, h, w] = np.sum(X_rec_field*dY_rec_field)
+
+        # calculating the global gradient wrt to the bias
+        db = np.sum(dY, axis=(0, 2, 3))
+
+        # caching the global gradients of the parameters
+        self.weight_update['W'] = dW
+        self.weight_update['b'] = db
+
+        return dX[:, :, self.padding:-self.padding, self.padding:-self.padding]
