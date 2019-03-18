@@ -159,6 +159,45 @@ class Flatten(Function):
         return dY.reshape(self.cache['shape'])
 
 
+class MaxPool2D(Function):
+    def __init__(self, kernel_size=(2, 2)):
+        self.kernel_size = (kernel_size, kernel_size) if isinstance(kernel_size, int) else kernel_size
+
+    def __call__(self, X):
+        # in contrary to other Function subclasses, MaxPool2D does not need to call
+        # .local_grad() after forward pass because the gradient is calculated during it
+        return self.forward(X)
+
+    def forward(self, X):
+        N, C, H, W = X.shape
+        KH, KW = self.kernel_size
+
+        grad = np.zeros_like(X)
+        Y = np.zeros((N, C, H//KH, W//KW))
+
+        # for n in range(N):
+        for h, w in product(range(0, H//KH), range(0, W//KW)):
+            h_offset, w_offset = h*KH, w*KW
+            rec_field = X[:, :, h_offset:h_offset+KH, w_offset:w_offset+KW]
+            Y[:, :, h, w] = np.max(rec_field, axis=(2, 3))
+            for kh, kw in product(range(KH), range(KW)):
+                grad[:, :, h_offset+kh, w_offset+kw] = (X[:, :, h_offset+kh, w_offset+kw] >= Y[:, :, h, w])
+
+        # storing the gradient
+        self.grad['X'] = grad
+
+        return Y
+
+    def backward(self, dY):
+        pass
+
+    def local_grad(self, X):
+        # small hack: because for MaxPool calculating the gradient is simpler during
+        # the forward pass, it is calculated there and this function just returns the
+        # grad dictionary
+        return self.grad
+
+
 class Conv2D(Layer):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0):
         super().__init__()
