@@ -161,6 +161,7 @@ class Flatten(Function):
 
 class MaxPool2D(Function):
     def __init__(self, kernel_size=(2, 2)):
+        super().__init__()
         self.kernel_size = (kernel_size, kernel_size) if isinstance(kernel_size, int) else kernel_size
 
     def __call__(self, X):
@@ -189,7 +190,9 @@ class MaxPool2D(Function):
         return Y
 
     def backward(self, dY):
-        pass
+        dY = np.repeat(np.repeat(dY, repeats=self.kernel_size[0], axis=2),
+                       repeats=self.kernel_size[1], axis=3)
+        return self.grad['X']*dY
 
     def local_grad(self, X):
         # small hack: because for MaxPool calculating the gradient is simpler during
