@@ -25,3 +25,15 @@ class ReLU(Function):
     def local_grad(self, X):
         grads = {'X': relu_prime(X)}
         return grads
+
+
+class LeakyReLU(Function):
+    def forward(self, X):
+        return leaky_relu(X)
+
+    def backward(self, dY):
+        return dY * self.grad['X']
+
+    def local_grad(self, X):
+        grads = {'X': leaky_relu_prime(X)}
+        return grads
