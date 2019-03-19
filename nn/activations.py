@@ -37,3 +37,16 @@ class LeakyReLU(Function):
     def local_grad(self, X):
         grads = {'X': leaky_relu_prime(X)}
         return grads
+
+
+class Softmax(Function):
+    def forward(self, X):
+        exp_x = np.exp(X)
+        probs = exp_x / np.sum(exp_x, axis=1, keepdims=True)
+        return probs
+
+    def backward(self, dY):
+        pass
+
+    def local_grad(self, X):
+        pass

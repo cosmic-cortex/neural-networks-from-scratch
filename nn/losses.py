@@ -103,5 +103,5 @@ class CrossEntropyLoss(Loss):
         for row_idx, col_idx in enumerate(Y):
             ones[row_idx, col_idx] = 1.0
 
-        grads = {'X': (probs - ones)/len(X)}
+        grads = {'X': (probs - ones)/float(len(X))}
         return grads
