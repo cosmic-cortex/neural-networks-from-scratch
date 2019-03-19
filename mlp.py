@@ -1,10 +1,53 @@
 import numpy as np
+
+np.random.seed(1)
+
 import matplotlib.pyplot as plt
 
 from nn.layers import *
 from nn.losses import CrossEntropyLoss
-from nn.activations import ReLU
+from nn.activations import ReLU, Softmax
 from nn.net import Net
+
+
+# functions for visualization
+def plot_data(X1, X2):
+    with plt.style.context('seaborn-white'):
+        plt.figure(figsize=(10, 10))
+        plt.scatter(X1[:, 0], X1[:, 1], c='r')
+        plt.scatter(X2[:, 0], X2[:, 1], c='b')
+        plt.title('The data')
+        plt.show()
+
+
+def make_grid(X_data, n_res=20):
+    x_min, x_max = X_data[:, 0].min() - 0.5, X_data[:, 0].max() + 0.5
+    y_min, y_max = X_data[:, 1].min() - 0.5, X_data[:, 1].max() + 0.5
+    x_meshgrid, y_meshgrid = np.meshgrid(np.linspace(x_min, x_max, n_res),
+                                         np.linspace(y_min, y_max, n_res))
+
+    X_grid = np.concatenate((x_meshgrid.reshape(-1, 1), y_meshgrid.reshape(-1, 1)), axis=1)
+
+    return x_meshgrid, y_meshgrid, X_grid
+
+
+def plot_classifier(net, X_data, x_meshgrid, y_meshgrid, X_grid, export_path=None):
+    y_grid = Softmax()(net(X_grid))[:, 0].reshape(x_meshgrid.shape)
+    y_data = net(X_data)
+    preds = np.argmax(y_data, axis=1)
+
+    with plt.style.context('seaborn-white'):
+        plt.figure(figsize=(10, 10))
+        plt.scatter(X_data[preds == 0, 0], X_data[preds == 0, 1], c='b', zorder=1)
+        plt.scatter(X_data[preds == 1, 0], X_data[preds == 1, 1], c='r', zorder=1)
+        plt.contourf(x_meshgrid, y_meshgrid, y_grid, zorder=0, cmap='RdBu')
+        if not export_path:
+            plt.show()
+        else:
+            plt.savefig(export_path)
+
+        plt.close('all')
+
 
 # generating some data
 n_class_size = 100
@@ -18,11 +61,9 @@ X2 = np.random.multivariate_normal([0, 0], [[0.1, 0], [0, 0.1]], size=n_class_si
 X = np.concatenate((X1, X2))
 Y_labels = np.array([0]*n_class_size + [1]*n_class_size)
 
-with plt.style.context('seaborn-white'):
-    plt.figure(figsize=(10, 10))
-    plt.scatter(X1[:, 0], X1[:, 1], c='r')
-    plt.scatter(X2[:, 0], X2[:, 1], c='b')
-    plt.show()
+plot_data(X1, X2)
+# make meshgrid
+x_meshgrid, y_meshgrid, X_grid = make_grid(X, n_res=100)
 
 net = Net(layers=[Linear(2, 4), ReLU(), Linear(4, 2)],
           loss=CrossEntropyLoss())
@@ -37,5 +78,6 @@ for epoch_idx in range(n_epochs):
     loss = net.loss(out, Y_labels)
     print('loss: %1.4f' % loss)
     grad = net.backward()
-    net.update_weights(0.01)
+    net.update_weights(0.1)
 
+    plot_classifier(net, X, x_meshgrid, y_meshgrid, X_grid)
