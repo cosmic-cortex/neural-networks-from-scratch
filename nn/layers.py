@@ -73,6 +73,154 @@ class Layer(Function):
             self.weight[weight_key] = self.weight[weight_key] - lr * self.weight_update[weight_key]
 
 
+class Flatten(Function):
+    def forward(self, X):
+        self.cache['shape'] = X.shape
+        n_batch = X.shape[0]
+        return X.reshape(n_batch, -1)
+
+    def backward(self, dY):
+        return dY.reshape(self.cache['shape'])
+
+
+class MaxPool2D(Function):
+    def __init__(self, kernel_size=(2, 2)):
+        super().__init__()
+        self.kernel_size = (kernel_size, kernel_size) if isinstance(kernel_size, int) else kernel_size
+
+    def __call__(self, X):
+        # in contrary to other Function subclasses, MaxPool2D does not need to call
+        # .local_grad() after forward pass because the gradient is calculated during it
+        return self.forward(X)
+
+    def forward(self, X):
+        N, C, H, W = X.shape
+        KH, KW = self.kernel_size
+
+        grad = np.zeros_like(X)
+        Y = np.zeros((N, C, H//KH, W//KW))
+
+        # for n in range(N):
+        for h, w in product(range(0, H//KH), range(0, W//KW)):
+            h_offset, w_offset = h*KH, w*KW
+            rec_field = X[:, :, h_offset:h_offset+KH, w_offset:w_offset+KW]
+            Y[:, :, h, w] = np.max(rec_field, axis=(2, 3))
+            for kh, kw in product(range(KH), range(KW)):
+                grad[:, :, h_offset+kh, w_offset+kw] = (X[:, :, h_offset+kh, w_offset+kw] >= Y[:, :, h, w])
+
+        # storing the gradient
+        self.grad['X'] = grad
+
+        return Y
+
+    def backward(self, dY):
+        dY = np.repeat(np.repeat(dY, repeats=self.kernel_size[0], axis=2),
+                       repeats=self.kernel_size[1], axis=3)
+        return self.grad['X']*dY
+
+    def local_grad(self, X):
+        # small hack: because for MaxPool calculating the gradient is simpler during
+        # the forward pass, it is calculated there and this function just returns the
+        # grad dictionary
+        return self.grad
+
+
+class BatchNorm2D(Layer):
+    def __init__(self, n_channels, epsilon=1e-5):
+        super().__init__()
+        self.epsilon = epsilon
+        self.n_channels = n_channels
+        self._init_weights(n_channels)
+
+    def _init_weights(self, n_channels):
+        self.weight['gamma'] = np.ones(shape=(1, n_channels, 1, 1))
+        self.weight['beta'] = np.zeros(shape=(1, n_channels, 1, 1))
+
+    def forward(self, X):
+        """
+        Forward pass for the 2D batchnorm layer.
+
+        Args:
+            X: numpy.ndarray of shape (n_batch, n_channels, height, width).
+
+        Returns_
+            Y: numpy.ndarray of shape (n_batch, n_channels, height, width).
+                Batch-normalized tensor of X.
+        """
+        mean = np.mean(X, axis=(2, 3), keepdims=True)
+        var = np.var(X, axis=(2, 3), keepdims=True) + self.epsilon
+        invvar = 1.0/var
+        sqrt_invvar = np.sqrt(invvar)
+        centered = X - mean
+        scaled = centered * sqrt_invvar
+        normalized = scaled * self.weight['gamma'] + self.weight['beta']
+
+        # caching intermediate results for backprop
+        self.cache['mean'] = mean
+        self.cache['var'] = var
+        self.cache['invvar'] = invvar
+        self.cache['sqrt_invvar'] = sqrt_invvar
+        self.cache['centered'] = centered
+        self.cache['scaled'] = scaled
+        self.cache['normalized'] = normalized
+
+        return normalized
+
+    def backward(self, dY):
+        """
+        Backward pass for the 2D batchnorm layer. Calculates global gradients
+        for the input and the parameters.
+
+        Args:
+            dY: numpy.ndarray of shape (n_batch, n_channels, height, width).
+
+        Returns:
+            dX: numpy.ndarray of shape (n_batch, n_channels, height, width).
+                Global gradient wrt the input X.
+        """
+        # global gradients of parameters
+        dgamma = np.sum(self.cache['scaled'] * dY, axis=(0, 2, 3), keepdims=True)
+        dbeta = np.sum(dY, axis=(0, 2, 3), keepdims=True)
+
+        # caching global gradients of parameters
+        self.weight_update['gamma'] = dgamma
+        self.weight_update['beta'] = dbeta
+
+        # global gradient of the input
+        dX = self.grad['X'] * dY
+
+        return dX
+
+    def local_grad(self, X):
+        """
+        Calculates the local gradient for X.
+
+        Args:
+            dY: numpy.ndarray of shape (n_batch, n_channels, height, width).
+
+        Returns:
+            grads: dictionary of gradients.
+        """
+        # global gradient of the input
+        N, C, H, W = X.shape
+        # ppc = pixels per channel, useful variable for further computations
+        ppc = H * W
+
+        # gradient for 'denominator path'
+        dsqrt_invvar = self.cache['centered']
+        dinvvar = (1.0 / (2.0 * np.sqrt(self.cache['invvar']))) * dsqrt_invvar
+        dvar = (-1.0 / self.cache['var'] ** 2) * dinvvar
+        ddenominator = (X - self.cache['mean']) * (2 * (ppc - 1) / ppc ** 2) * dvar
+
+        # gradient for 'numerator path'
+        dcentered = self.cache['sqrt_invvar']
+        dnumerator = (1.0 - 1.0 / ppc) * dcentered
+
+        dX = ddenominator + dnumerator
+        grads = {'X': dX}
+        return grads
+
+
 class Linear(Layer):
     def __init__(self, in_dim, out_dim):
         super().__init__()
@@ -146,58 +294,6 @@ class Linear(Layer):
         gradb_local = np.ones_like(self.weight['b'])
         grads = {'X': gradX_local, 'W': gradW_local, 'b': gradb_local}
         return grads
-
-
-class Flatten(Function):
-    def forward(self, X):
-        self.cache['shape'] = X.shape
-        n_batch = X.shape[0]
-        return X.reshape(n_batch, -1)
-
-    def backward(self, dY):
-        return dY.reshape(self.cache['shape'])
-
-
-class MaxPool2D(Function):
-    def __init__(self, kernel_size=(2, 2)):
-        super().__init__()
-        self.kernel_size = (kernel_size, kernel_size) if isinstance(kernel_size, int) else kernel_size
-
-    def __call__(self, X):
-        # in contrary to other Function subclasses, MaxPool2D does not need to call
-        # .local_grad() after forward pass because the gradient is calculated during it
-        return self.forward(X)
-
-    def forward(self, X):
-        N, C, H, W = X.shape
-        KH, KW = self.kernel_size
-
-        grad = np.zeros_like(X)
-        Y = np.zeros((N, C, H//KH, W//KW))
-
-        # for n in range(N):
-        for h, w in product(range(0, H//KH), range(0, W//KW)):
-            h_offset, w_offset = h*KH, w*KW
-            rec_field = X[:, :, h_offset:h_offset+KH, w_offset:w_offset+KW]
-            Y[:, :, h, w] = np.max(rec_field, axis=(2, 3))
-            for kh, kw in product(range(KH), range(KW)):
-                grad[:, :, h_offset+kh, w_offset+kw] = (X[:, :, h_offset+kh, w_offset+kw] >= Y[:, :, h, w])
-
-        # storing the gradient
-        self.grad['X'] = grad
-
-        return Y
-
-    def backward(self, dY):
-        dY = np.repeat(np.repeat(dY, repeats=self.kernel_size[0], axis=2),
-                       repeats=self.kernel_size[1], axis=3)
-        return self.grad['X']*dY
-
-    def local_grad(self, X):
-        # small hack: because for MaxPool calculating the gradient is simpler during
-        # the forward pass, it is calculated there and this function just returns the
-        # grad dictionary
-        return self.grad
 
 
 class Conv2D(Layer):
