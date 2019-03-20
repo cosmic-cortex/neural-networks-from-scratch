@@ -88,7 +88,7 @@ class CrossEntropyLoss(Loss):
         # calculating crossentropy
         exp_x = np.exp(X)
         probs = exp_x/np.sum(exp_x, axis=1, keepdims=True)
-        log_probs = -np.log(probs[:, y])
+        log_probs = -np.log([probs[i, y[i]] for i in range(len(probs))])
         crossentropy_loss = np.mean(log_probs)
 
         # caching for backprop

@@ -1,7 +1,5 @@
 import numpy as np
 
-np.random.seed(1)
-
 import matplotlib.pyplot as plt
 
 from nn.layers import *
@@ -79,5 +77,3 @@ for epoch_idx in range(n_epochs):
     print('loss: %1.4f' % loss)
     grad = net.backward()
     net.update_weights(0.1)
-
-    plot_classifier(net, X, x_meshgrid, y_meshgrid, X_grid)
