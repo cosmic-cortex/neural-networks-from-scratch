@@ -27,8 +27,9 @@ print('data scaled')
 # split to train and validation datasets
 idx = np.arange(len(X))
 np.random.shuffle(idx)
-X_train, y_train = X[idx[:50000]], y[idx[:50000]]
-X_val, y_val = X[idx[50000:]], y[idx[50000:]]
+val_split = int(len(X)*0.9)
+X_train, y_train = X[idx[:val_split]], y[idx[:val_split]]
+X_val, y_val = X[idx[val_split:]], y[idx[val_split:]]
 
 net = Net(layers=[Conv2D(3, 8, 3, padding=1), MaxPool2D(kernel_size=2), ReLU(), BatchNorm2D(8),
                   Conv2D(8, 16, 3, padding=1), MaxPool2D(kernel_size=2), ReLU(), BatchNorm2D(16),
