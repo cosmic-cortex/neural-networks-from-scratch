@@ -10,8 +10,10 @@
   - [`MaxPool2D`](#maxpool2d)
   - [`BatchNorm2D`](#batchnorm2d)
   - [`Flatten`](#flatten)
-- [Activations](#activations)
 - [Losses](#losses)
+  - [CrossEntropyLoss](#crossentropyloss)
+  - [MeanSquareLoss](#meansquareloss)
+- [Activations](#activations)
   
 # Quickstart<a name="quickstart"></a>
 ## A simple example CNN<a name="CNN-example"></a>
@@ -106,4 +108,20 @@ Usage:
 - output: `numpy.ndarray` of shape `(N, C*H*W)`.
 
 # Losses<a name="losses"></a>
+The implemented loss functions are located in `nn.losses`. As Layers, they are callable objects, with predictions and targets as input.
+
+## CrossEntropyLoss<a name="crossentropyloss"></a>
+Cross-entropy loss. Usage:
+- input: `numpy.ndarray` of shape `(N, D)` containing the class scores for each element in the batch.
+- output: `float`.
+
+## MeanSquareLoss<`a name="meansquareloss"></a>
+Mean square loss. Usage:
+- input: `numpy.ndarray` of shape `(N, D)`.
+- output: `numpy.ndarray` of shape `(N, D)`.
+
 # Activations<a name="activations"></a>
+The activation layers for the network can be found in `nn.activations`. They are functions, applying the specified activation function elementwisely on a `numpy.ndarray`. Currently, the following activation functions are implemented:
+- ReLU
+- Leaky ReLU
+- Sigmoid
