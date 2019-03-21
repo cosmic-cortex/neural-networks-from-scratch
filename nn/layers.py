@@ -344,7 +344,7 @@ class Conv2D(Layer):
 
     def backward(self, dY):
         # calculating the global gradient to be propagated backwards
-        # TODO: this is actually transpose convolution, move this to an util function
+        # TODO: this is actually transpose convolution, move this to a util function
         X = self.cache['X']
         dX = np.zeros_like(X)
         N, C, H, W = dX.shape
