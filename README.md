@@ -11,8 +11,8 @@
   - [`BatchNorm2D`](#batchnorm2d)
   - [`Flatten`](#flatten)
 - [Losses](#losses)
-  - [CrossEntropyLoss](#crossentropyloss)
-  - [MeanSquareLoss](#meansquareloss)
+  - [`CrossEntropyLoss`](#crossentropyloss)
+  - [`MeanSquareLoss`](#meansquareloss)
 - [Activations](#activations)
   
 # Quickstart<a name="quickstart"></a>
@@ -110,12 +110,12 @@ Usage:
 # Losses<a name="losses"></a>
 The implemented loss functions are located in `nn.losses`. As Layers, they are callable objects, with predictions and targets as input.
 
-## CrossEntropyLoss<a name="crossentropyloss"></a>
+## `CrossEntropyLoss`<a name="crossentropyloss"></a>
 Cross-entropy loss. Usage:
 - input: `numpy.ndarray` of shape `(N, D)` containing the class scores for each element in the batch.
 - output: `float`.
 
-## MeanSquareLoss<`a name="meansquareloss"></a>
+## `MeanSquareLoss`<a name="meansquareloss"></a>
 Mean square loss. Usage:
 - input: `numpy.ndarray` of shape `(N, D)`.
 - output: `numpy.ndarray` of shape `(N, D)`.
