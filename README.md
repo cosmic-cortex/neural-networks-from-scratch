@@ -29,7 +29,8 @@ images_folder
    |-- ...
 ```
 Its required argument is
-- `--dataset`: path to the dataset,
+- `--dataset`: path to the dataset,  
+
 while the optional arguments are
 - `--epochs`: number of epochs,
 - `--batch_size`: size of the training batch,
