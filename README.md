@@ -10,9 +10,8 @@
   - [`MaxPool2D`](#maxpool2d)
   - [`BatchNorm2D`](#batchnorm2d)
   - [`Flatten`](#flatten)
+- [Activations](#activations)
 - [Losses](#losses)
-  - [`CrossEntropyLoss`](#crossentropyloss)
-  - [`MeanSquareLoss`](#meansquareloss)
   
 # Quickstart<a name="quickstart"></a>
 ## A simple example CNN<a name="CNN-example"></a>
@@ -53,12 +52,58 @@ net.update_weights(lr)
 ```
 
 # Layers<a name="layers"></a>
+The currently implemented layers can be found in `nn.layers`. Each layer is a callable object, where calling performs the forward pass and calculates local gradients. The most important methods are:
+- `.forward(X)`: performs the forward pass for X. Instead calling `forward` directly, the layer object should be called directly, which calculates and caches local gradients.
+- `.backward(dY)`: performs the backward pass, where `dY` is the gradient propagated backwards from the consequtive layer.
+- `.local_grad(X)`: calculates the local gradient of the input.
+
+The input to the layers should always be a `numpy.ndarray` of shape `(n_batch, ...)`. For the 2D layers for images, the input should have shape `(n_batch, n_channels, n_height, n_width)`.
+
 ## `Linear`<a name="linear"></a>
+A simple fully connected layer. 
+Parameters:
+- `in_dim`: integer, dimensions of the input.
+- `out_dim`: integer, dimensions of the output.
+
+Usage:
+- input: `numpy.ndarray` of shape `(N, in_dim)`.
+- output: `numpy.ndarray` of shape `(N, out_dim)`.
+
 ## `Conv2D`<a name="conv2d"></a>
+2D convolutional layer. Parameters:
+- `in_channels`: integer, number of channels in the input image.
+- `out_channels`: integer, number of filters to be learned.
+- `kernel_size`: integer or tuple, the size of the filter to be learned. Defaults to 3.
+- `stride`: integer, stride of the convolution. Defaults to 1.
+- `padding`: integer, number of zeros to be added to each edge of the images. Defaults to 0.
+
+Usage:
+- input: `numpy.ndarray` of shape `(N, C_in, H_in, W_in)`.
+- output: `numpy.ndarray` of shape `(N, C_out, H_out, W_out)`.
+
 ## `MaxPool2D`<a name="maxpool2d"></a>
+2D max pooling layer. Parameters:
+- `kernel_size`: integer or tuple, size of the pooling window. Defaults to 2.
+
+Usage:
+- input: `numpy.ndarray` of shape `(N, C, H, W)`.
+- output: `numpy.ndarray` of shape `(N, C, H//KH, W//KW)` with kernel size `(KH, KW)`.
+
 ## `BatchNorm2D`<a name="batchnorm2d"></a>
+2D batch normalization layer. Parameters:
+- `n_channels`: integer, number of channels.
+- `epsilon`: epsilon parameter for BatchNorm, defaults to 1e-5.
+
+Usage:
+- input: `numpy.ndarray` of shape `(N, C, H, W)`.
+- output: `numpy.ndarray` of shape `(N, C, H, W)`.
+
 ## `Flatten`<a name="flatten"></a>
+A simple layer which flattens the outputs of a 2D layer for images.
+
+Usage:
+- input: `numpy.ndarray` of shape `(N, C, H, W)`.
+- output: `numpy.ndarray` of shape `(N, C*H*W)`.
 
 # Losses<a name="losses"></a>
-## CrossEntropyLoss<a name="crossentropyloss"></a>
-## MeanSquareLoss<a name="meansquareloss"></a>
+# Activations<a name="activations"></a>
