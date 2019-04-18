@@ -7,7 +7,7 @@ def sigmoid(x):
 
 def sigmoid_prime(x):
     s = sigmoid(x)
-    return s * (1 - x)
+    return s * (1 - s)
 
 
 def relu(x):
