@@ -308,7 +308,7 @@ class Conv2D(Layer):
         self._init_weights(in_channels, out_channels, self.kernel_size)
 
     def _init_weights(self, in_channels, out_channels, kernel_size):
-        scale = 2/sqrt(in_channels*kernel_size[0]*kernel_size[0])
+        scale = 2/sqrt(in_channels*kernel_size[0]*kernel_size[1])
 
         self.weight = {'W': np.random.normal(scale=scale,
                                              size=(out_channels, in_channels, *kernel_size)),
