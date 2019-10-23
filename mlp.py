@@ -9,14 +9,16 @@ from nn.net import Net
 
 
 # functions for visualization
-def plot_data(X1, X2):
+def plot_data(X1, X2, export_path=None):
     with plt.style.context('seaborn-white'):
         plt.figure(figsize=(10, 10))
-        plt.scatter(X1[:, 0], X1[:, 1], c='r')
-        plt.scatter(X2[:, 0], X2[:, 1], c='b')
+        plt.scatter(X1[:, 0], X1[:, 1], c='r', edgecolor='k')
+        plt.scatter(X2[:, 0], X2[:, 1], c='b', edgecolor='k')
         plt.title('The data')
-        plt.show()
-
+        if export_path is None:
+            plt.show()
+        else:
+            plt.savefig(export_path, dpi=500)
 
 def make_grid(X_data, n_res=20):
     x_min, x_max = X_data[:, 0].min() - 0.5, X_data[:, 0].max() + 0.5
@@ -35,14 +37,14 @@ def plot_classifier(net, X_data, x_meshgrid, y_meshgrid, X_grid, export_path=Non
     preds = np.argmax(y_data, axis=1)
 
     with plt.style.context('seaborn-white'):
-        plt.figure(figsize=(10, 10))
-        plt.scatter(X_data[preds == 0, 0], X_data[preds == 0, 1], c='b', zorder=1)
-        plt.scatter(X_data[preds == 1, 0], X_data[preds == 1, 1], c='r', zorder=1)
+        plt.figure(figsize=(5, 5))
+        plt.scatter(X_data[preds == 0, 0], X_data[preds == 0, 1], c='b', zorder=1, edgecolor='k')
+        plt.scatter(X_data[preds == 1, 0], X_data[preds == 1, 1], c='r', zorder=1, edgecolor='k')
         plt.contourf(x_meshgrid, y_meshgrid, y_grid, zorder=0, cmap='RdBu')
         if not export_path:
             plt.show()
         else:
-            plt.savefig(export_path)
+            plt.savefig(export_path, dpi=500)
 
         plt.close('all')
 
@@ -77,3 +79,5 @@ for epoch_idx in range(n_epochs):
     print('loss: %1.4f' % loss)
     grad = net.backward()
     net.update_weights(0.1)
+    if epoch_idx % 50 == 0:
+        plot_classifier(net, X, x_meshgrid, y_meshgrid, X_grid)
