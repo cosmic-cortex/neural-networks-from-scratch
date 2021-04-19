@@ -24,7 +24,7 @@ class Loss(Function):
         Returns:
             gradX: numpy.ndarray of shape (n_batch, n_dim). Local gradient of the loss.
         """
-        return self.grad['X']
+        return self.grad["X"]
 
     def local_grad(self, X, Y):
         """
@@ -68,7 +68,7 @@ class MeanSquareLoss(Loss):
         Returns:
             gradX: numpy.ndarray of shape (n_batch, n_dim). Gradient of MSE wrt X at X and Y.
         """
-        grads = {'X': 2 * (X - Y) / X.shape[0]}
+        grads = {"X": 2 * (X - Y) / X.shape[0]}
         return grads
 
 
@@ -87,21 +87,21 @@ class CrossEntropyLoss(Loss):
         """
         # calculating crossentropy
         exp_x = np.exp(X)
-        probs = exp_x/np.sum(exp_x, axis=1, keepdims=True)
+        probs = exp_x / np.sum(exp_x, axis=1, keepdims=True)
         log_probs = -np.log([probs[i, y[i]] for i in range(len(probs))])
         crossentropy_loss = np.mean(log_probs)
 
         # caching for backprop
-        self.cache['probs'] = probs
-        self.cache['y'] = y
+        self.cache["probs"] = probs
+        self.cache["y"] = y
 
         return crossentropy_loss
 
     def local_grad(self, X, Y):
-        probs = self.cache['probs']
+        probs = self.cache["probs"]
         ones = np.zeros_like(probs)
         for row_idx, col_idx in enumerate(Y):
             ones[row_idx, col_idx] = 1.0
 
-        grads = {'X': (probs - ones)/float(len(X))}
+        grads = {"X": (probs - ones) / float(len(X))}
         return grads

@@ -3,13 +3,14 @@ from .layers import Function, Layer
 
 
 class Net:
-    __slots__ = ['layers', 'loss_fn']
+    __slots__ = ["layers", "loss_fn"]
 
     def __init__(self, layers, loss):
-        assert isinstance(loss, Loss), 'loss must be an instance of nn.losses.Loss'
+        assert isinstance(loss, Loss), "loss must be an instance of nn.losses.Loss"
         for layer in layers:
-            assert isinstance(layer, Function), 'layer should be an instance of ' \
-                                                'nn.layers.Function or nn.layers.Layer'
+            assert isinstance(layer, Function), (
+                "layer should be an instance of " "nn.layers.Function or nn.layers.Layer"
+            )
 
         self.layers = layers
         self.loss_fn = loss
