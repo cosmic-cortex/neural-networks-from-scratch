@@ -68,10 +68,10 @@ plot_data(X1, X2)
 x_meshgrid, y_meshgrid, X_grid = make_grid(X, n_res=100)
 
 net = Net(
-    layers=[Linear(2, 4), ReLU(), Linear(4, 4), ReLU(), Linear(4, 2)], loss=CrossEntropyLoss()
+    layers=[Linear(2, 4), ReLU(), Linear(4, 2), Softmax()], loss=CrossEntropyLoss()
 )
 
-n_epochs = 1000
+n_epochs = 10000
 for epoch_idx in range(n_epochs):
     print("Epoch no. %d" % epoch_idx)
     out = net(X)
@@ -82,5 +82,5 @@ for epoch_idx in range(n_epochs):
     print("loss: %1.4f" % loss)
     grad = net.backward()
     net.update_weights(0.1)
-    if epoch_idx % 50 == 0:
+    if epoch_idx % 1000 == 0:
         plot_classifier(net, X, x_meshgrid, y_meshgrid, X_grid)

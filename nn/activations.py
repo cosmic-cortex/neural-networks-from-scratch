@@ -48,7 +48,22 @@ class Softmax(Function):
         return probs
 
     def backward(self, dY):
-        pass
+        dX = []
+
+        for dY_row, grad_row in zip(dY, self.grad["X"]):
+            dX.append(np.dot(dY_row, grad_row))
+
+        return np.array(dX)
 
     def local_grad(self, X):
-        pass
+        grad = []
+
+        for prob in self.cache["output"]:
+            prob = prob.reshape(-1, 1)
+            grad_row = -np.dot(prob, prob.T)
+            grad_row_diagonal = prob * (1 - prob)
+            np.fill_diagonal(grad_row, grad_row_diagonal)
+            grad.append(grad_row)
+
+        grad = np.array(grad)
+        return {"X": grad}
