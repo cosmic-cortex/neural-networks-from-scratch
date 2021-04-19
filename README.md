@@ -16,6 +16,19 @@
 - [Activations](#activations)
   
 # Quickstart<a name="quickstart"></a>
+
+## Installation<a name="installation"></a>
+To run the examples, creating a virtual environment is recommended.
+```bash
+virtualenv neural-networks-from scratch
+```
+When a virtual environment is in place, all requirements can be installed with pip.
+```bash
+source neural-networks-from-scratch/bin/activate
+pip install -r requirements.txt
+```
+
+
 ## A simple example CNN<a name="CNN-example"></a>
 A simple convolutional network for image classification can be found in `CNN_custom_dataset.py`. To try it on your own dataset, you should prepare your images in the following format:
 ```bash
